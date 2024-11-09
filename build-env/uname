@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+B=$(uname.orig -r)
+I=$(rpm -q --qf '%{version}-%{release}.%{arch}' kernel)
+
+O=$(uname.orig "$@")
+E=$?
+
+echo "${O//$B/$I}"
+exit $E
