@@ -1,0 +1,11 @@
+[Unit]
+Description=Regenerate NVIDIA CDI specifications
+Before=containers.target
+
+[Service]
+Type=oneshot
+RemainsAfterExit=yes
+ExecStart=/usr/bin/ncs
+
+[Install]
+WantedBy=containers.target

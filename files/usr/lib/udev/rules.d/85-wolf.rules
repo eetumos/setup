@@ -1,0 +1,2 @@
+SUBSYSTEMS=="input", ATTRS{name}=="Wolf*", MODE="0000"
+SUBSYSTEMS=="hid", ENV{HID_NAME}=="Wolf*", MODE="0000"
