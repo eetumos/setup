@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+
+if ! rg -q icd /etc/cdi/nvidia.yaml
+then
+    M=$(( $(rg -n mounts: /etc/cdi/nvidia.yaml | cut -d: -f1) + 1 ))
+    sudo sed -i -e "${M}i\  - containerPath: /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json" \
+                -e "${M}i\    hostPath: /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json"      \
+                -e "${M}i\    options:"                                                      \
+                -e "${M}i\    - ro"                                                          \
+                -e "${M}i\    - nosuid"                                                      \
+                -e "${M}i\    - nodev"                                                       \
+                -e "${M}i\    - bind"                                                        \
+                /etc/cdi/nvidia.yaml
+fi
