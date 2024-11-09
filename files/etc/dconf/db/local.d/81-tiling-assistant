@@ -1,0 +1,12 @@
+[org/gnome/shell/extensions/tiling-assistant]
+single-screen-gap=0
+window-gap=0
+tile-left-half=['<Shift><Super>h']
+tile-bottom-half=['<Shift><Super>j']
+tile-top-half=['<Shift><Super>k']
+tile-right-half=['<Shift><Super>l']
+tile-maximize=['<Shift><Super>y']
+tile-topleft-quarter=['<Shift><Super>u']
+tile-topright-quarter=['<Shift><Super>i']
+tile-bottomleft-quarter=['<Shift><Super>o']
+tile-bottomright-quarter=['<Shift><Super>p']
