@@ -1,0 +1,1 @@
+export DISABLE_VK_LAYER_VALVE_steam_overlay_1=1
