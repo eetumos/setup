@@ -46,6 +46,11 @@ RUN dnf remove  -y ffmpeg-free libav{codec,format,filter,device,util}-free libsw
     echo NoDisplay=true | tee -a /usr/share/applications/{nvim,htop}.desktop >/dev/null
 RUN dnf install -y https://github.com/Open-Wine-Components/umu-launcher/releases/latest/download/umu-launcher-1.2.5.fc41.rpm
 
+RUN --mount=type=bind,src=patches/rpm,dst=patches,relabel=shared \
+    ./patches/patch-n-build                                   && \
+    dnf install -y *.rpm                                      && \
+    rm             *.rpm
+
 RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip | bsdtar xC /usr/bin --strip-components=1 && \
     chmod 755 /usr/bin/bun
 
