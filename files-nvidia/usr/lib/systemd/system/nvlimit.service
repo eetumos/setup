@@ -1,0 +1,11 @@
+[Unit]
+Description=Modify NVIDIA GPU limits
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/nvlimit on
+ExecStop=/usr/bin/nvlimit off
+
+[Install]
+WantedBy=multi-user.target
