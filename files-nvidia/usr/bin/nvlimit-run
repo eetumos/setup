@@ -1,0 +1,17 @@
+#!/usr/bin/bash
+export seat=$(loginctl session-status | rg -oP "Seat: \Kseat[0-9]+")
+
+cleanup() {
+    trap - TERM EXIT
+
+    if [[ -n $(jobs -pr) ]]
+    then
+        kill $(jobs -pr)
+    fi
+
+    sudo nvlimit off
+}
+trap cleanup TERM EXIT
+
+sudo nvlimit on &
+"$@"
