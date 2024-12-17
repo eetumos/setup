@@ -96,6 +96,8 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     rm -f /etc/nvidia/kernel.conf.rpmnew                                                                    && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
 
+RUN python -m venv /usr/lib/nvidia-venv && /usr/lib/nvidia-venv/bin/pip install nvidia-ml-py
+
 RUN dnf install -y python3.12                                                            && \
     PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man \
     pipx install --global --python=python3.12 whisper-ctranslate2
