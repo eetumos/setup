@@ -1,0 +1,47 @@
+#!/usr/lib/nvidia-venv/bin/python
+import os, subprocess, sys, time
+from pynvml import *
+
+if sys.argv[1:] not in (['off'], ['on']):
+    print('USAGE: nvlimit off|on')
+    sys.exit(1)
+
+config = []
+if os.path.exists('/etc/nvlimit'):
+    config = list(open('/etc/nvlimit'))
+
+if not config:
+    sys.exit(0)
+
+nvmlInit()
+
+def apply(busid, fan, power, offset):
+    dev  = nvmlDeviceGetHandleByPciBusId(busid)
+    fans = nvmlDeviceGetNumFans(dev)
+
+    if fan == 0:
+        for i in range(fans):
+            nvmlDeviceSetFanControlPolicy(dev, i, 0)
+    else:
+        for s in range(35, fan, 5):
+            for i in range(fans):
+                nvmlDeviceSetFanSpeed_v2(dev, i, s)
+                time.sleep(0.15)
+        for i in range(fans):
+            nvmlDeviceSetFanSpeed_v2(dev, i, fan)
+
+    if power == 0:
+        power = nvmlDeviceGetPowerManagementDefaultLimit(dev)
+    nvmlDeviceSetPowerManagementLimit(dev, power)
+
+    nvmlDeviceSetGpcClkVfOffset(dev, offset)
+
+for entry in config:
+    busid, fan, power, offset = entry.split('|')
+
+    if sys.argv[1] == 'off':
+        fan    = 0
+        power  = 0
+        offset = 0
+
+    apply(busid, int(fan), int(power) * 1000, int(offset))
