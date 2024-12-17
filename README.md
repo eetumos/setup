@@ -13,6 +13,7 @@ Highlights
 ### Software
 - desktop environment (gnome, chromium, libreoffice, mpv, ...)
 - common cli tools (tmux, nnn, nvim, ripgrep, ...)
+- wrapper for umu-launcher
 
 
 Issues
