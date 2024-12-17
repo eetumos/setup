@@ -57,8 +57,8 @@ RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x
 RUN CARGO_HOME=cargo-home cargo install --no-track --root=/usr dufs tokei fclones binwalk && \
     rm -r cargo-home
 
-RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man \
-    pipx install --global yt-dlp[default,secretstorage,curl-cffi] ocrmypdf pgsrip           \
+RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man  \
+    pipx install --global yt-dlp[default,secretstorage,curl-cffi] ocrmypdf pgsrip icoextract \
                           pulsemixer liquidctl undervolt
 
 RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit
@@ -93,6 +93,8 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     rm -f /etc/nvidia/kernel.conf.rpmnew                                                                    && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop                                             && \
     dkms autoinstall
+
+RUN python -m venv /usr/lib/nvidia-venv && /usr/lib/nvidia-venv/bin/pip install nvidia-ml-py
 
 RUN dnf install -y python3.12                                                            && \
     PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man \
