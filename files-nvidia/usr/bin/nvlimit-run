@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+export seat=$(loginctl session-status | rg -oP "Seat: \Kseat[0-9]+")
+
+sudo nvlimit on
+"$@"
+sudo nvlimit off
