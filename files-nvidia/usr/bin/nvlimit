@@ -1,0 +1,44 @@
+#!/usr/lib/nvidia-venv/bin/python
+import os, subprocess, sys, time
+from pynvml import *
+
+seat = subprocess.check_output(['loginctl', 'seat-status', os.environ.get('seat', 'seat0')])
+nvmlInit()
+
+if sys.argv[1:] not in (['off'], ['on']):
+    print('USAGE: nvl=CONFIG nvlimit off|on')
+    sys.exit(1)
+
+for gpu in os.environ.get('nvl', '').split(','):
+    busid, *config = gpu.split('|')
+
+    if f"/{busid}/drm".encode() in seat:
+        break
+else:
+    sys.exit()
+
+dev  = nvmlDeviceGetHandleByPciBusId(busid)
+fans = nvmlDeviceGetNumFans(dev)
+
+fan    = 0
+power  = nvmlDeviceGetPowerManagementDefaultLimit(dev)
+offset = 0
+
+if sys.argv[1] == 'on':
+    if len(config) >= 1: fan    = int(config[0])
+    if len(config) >= 2: power  = int(config[1]) * 1000
+    if len(config) >= 3: offset = int(config[2])
+
+if fan == 0:
+    for i in range(fans):
+        nvmlDeviceSetFanControlPolicy(dev, i, 0)
+else:
+    for s in range(35, fan, 5):
+        for i in range(fans):
+            nvmlDeviceSetFanSpeed_v2(dev, i, s)
+            time.sleep(0.15)
+    for i in range(fans):
+        nvmlDeviceSetFanSpeed_v2(dev, i, fan)
+
+nvmlDeviceSetPowerManagementLimit(dev, power)
+nvmlDeviceSetGpcClkVfOffset(dev, offset)
