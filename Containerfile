@@ -48,6 +48,9 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
                    steam gamescope mangohud egl-utils vulkan-tools igt-gpu-tools vulkan-validation-layers   && \
     setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop                               && \
     echo NoDisplay=true | tee -a /usr/share/applications/{nvim,htop}.desktop >/dev/null
+RUN fix() { cat /etc/$1 >>/usr/lib/$1; cp /dev/null /etc/$1; } && \
+    fix passwd                                                 && \
+    fix group
 
 RUN --mount=type=bind,src=patches/rpm,dst=patches,z \
     ./patches/patch-n-build                      && \
