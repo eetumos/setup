@@ -99,6 +99,7 @@ RUN curl -sLO --output-dir /usr/share/fonts https://github.com/dmlls/whatsapp-em
 ### NOTE: base ###
 FROM common AS base
 
+RUN ! [ -f /usr/lib/udev/rules.d/60-persistent-hidraw.rules ]
 COPY files/ /
 RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update
 
@@ -124,5 +125,6 @@ RUN --mount=type=cache,dst=.                                                    
     tar xf ollama-linux-amd64.tgz --exclude=libcu*.so*                                                                          && \
     mv bin/ollama /usr/bin/ && mv lib/ollama /usr/lib/ && rm -r bin lib
 
+RUN ! [ -f /usr/lib/udev/rules.d/60-persistent-hidraw.rules ]
 COPY files/ files-nvidia/ /
 RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update
