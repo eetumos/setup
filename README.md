@@ -15,14 +15,6 @@ Highlights
 - mutter ([xreal air](https://github.com/eetumos/setup/blob/main/patches/rpm/mutter/xreal-air-sbs.patch))
 
 
-Issues
-------
-- kernel arguments require manual modification
-  - add `preempt=full`
-  - add `module_blacklist=nouveau`
->>>>>>> 847d5e1 (Patch mutter)
-
-
 Tips
 ----
 ### Fix NVIDIA
