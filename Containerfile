@@ -80,6 +80,18 @@ RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x
 RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit && \
     chmod +x  /usr/bin/kepubify
 
+RUN --mount=type=bind,src=patches/monado,dst=patches,z                                          \
+    dnf install -y {eigen3,hidapi,openxr,systemd,vulkan-loader,wayland,wayland-protocols}-devel \
+                   lib{drm,glvnd,usb1,v4l,Xrandr}-devel glslang                              && \
+    git clone --recurse-submodules https://gitlab.freedesktop.org/monado/monado.git          && \
+    cd monado                                                                                && \
+    for P in ../patches/*; do git apply $P; done                                             && \
+    cmake  -B       build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr                \
+                          -DBUILD_TESTING=OFF -DXRT_FEATURE_SERVICE=OFF                      && \
+    cmake --build   build -j                                                                 && \
+    cmake --install build                                                                    && \
+    cd .. && rm -r monado
+
 RUN rew=$(curl https://roomeqwizard.com/installers/ | rg -o 'REW_linux_no_jre.*\.sh' | sort -Vr | head -n1) && \
     curl -o rew https://roomeqwizard.com/installers/$rew                                                    && \
     sed -i 's/-gt "17"/= ""/g' rew                                                                          && \
