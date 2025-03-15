@@ -1,0 +1,13 @@
+diff --git a/src/nnn.c b/src/nnn.c
+index 6fbba10..0c8accb 100644
+--- a/src/nnn.c
++++ b/src/nnn.c
+@@ -4396,7 +4396,7 @@ static void printent(int pdents_index, uint_t namecols, bool sel)
+ 	}
+ 
+ 	if (sel)
+-		attrs |= A_REVERSE | A_BOLD;
++		attrs |= A_REVERSE;
+ 	if (attrs)
+ 		attron(attrs);
+ 	if (!ind)
