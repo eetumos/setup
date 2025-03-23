@@ -17,6 +17,7 @@ Highlights
 
 ### Patches
 - multiseat (gnome-shell)
+- xreal air (mutter)
 
 
 Issues
