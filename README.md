@@ -13,6 +13,8 @@ Highlights
 ### Patched software
 - gdm ([multiseat](https://gitlab.gnome.org/GNOME/gdm/-/merge_requests/291))
 - gnome-shell ([multiseat](https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2230))
+- mutter ([xreal air](https://github.com/eetumos/setup/blob/main/patches/rpm/mutter/xreal-air-sbs.patch))
+- monado ([xreal air](https://gitlab.freedesktop.org/monado/monado/-/merge_requests/2435))
 
 
 Tips
