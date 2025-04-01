@@ -66,6 +66,9 @@ RUN --mount=type=bind,src=patches/monado,dst=patches,z                          
     cmake --install build                                                                                                     && \
     cd .. && rm -r monado
 
+RUN dnf copr enable -y iucar/rstudio && \
+    dnf install -y rstudio-desktop
+
 RUN dnf copr enable -y eetumos/wpewebkit && \
     dnf install -y cog
 
