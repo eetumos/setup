@@ -75,7 +75,7 @@ RUN dnf copr enable -y eetumos/wpewebkit && \
 RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip | bsdtar xC /usr/bin --strip-components=1 && \
     chmod 755 /usr/bin/bun
 
-RUN CARGO_HOME=cargo-home cargo install --no-track --root=/usr dufs tokei fclones binwalk && \
+RUN CARGO_HOME=cargo-home cargo install --no-track --root=/usr dufs tokei binwalk fclones intentrace && \
     rm -r cargo-home
 
 RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man \
