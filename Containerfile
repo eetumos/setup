@@ -66,6 +66,9 @@ RUN --mount=type=bind,src=patches/monado,dst=patches,z                          
     cmake --install build                                                                                                     && \
     cd .. && rm -r monado
 
+RUN dnf copr enable -y eetumos/wpewebkit && \
+    dnf install -y cog
+
 RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip | bsdtar xC /usr/bin --strip-components=1 && \
     chmod 755 /usr/bin/bun
 
