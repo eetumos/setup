@@ -10,6 +10,10 @@ Highlights
 - nvidia
 - zenergy
 
+### Patched software
+- gdm ([multiseat](https://gitlab.gnome.org/GNOME/gdm/-/merge_requests/291))
+- gnome-shell ([multiseat](https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2230))
+
 
 Tips
 ----
