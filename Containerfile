@@ -48,6 +48,11 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     echo NoDisplay=true | tee -a /usr/share/applications/{nvim,htop}.desktop >/dev/null
 RUN dnf install -y https://github.com/Open-Wine-Components/umu-launcher/releases/latest/download/umu-launcher-1.2.6.fc41.rpm
 
+RUN --mount=type=bind,src=patches/rpm,dst=patches,z \
+    ./patches/patch-n-build                      && \
+    dnf reinstall -y *.rpm                       && \
+    rm               *.rpm
+
 RUN dnf copr enable -y iucar/rstudio && \
     dnf install -y rstudio-desktop {R,libcurl,fribidi,libtiff}-devel
 
