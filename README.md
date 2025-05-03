@@ -15,6 +15,9 @@ Highlights
 - common cli tools (tmux, nnn, nvim, ripgrep, ...)
 - wrapper for umu-launcher
 
+### Patches
+- multiseat (gnome-shell)
+
 
 Issues
 ------
