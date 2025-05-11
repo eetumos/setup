@@ -9,11 +9,6 @@ binding='<Super>Return'
 command='ptyxis --new-window'
 name='Open terminal'
 
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/mangohud]
-binding='<Control>section'
-command='mangohud-toggle'
-name='Toggle MangoHud'
-
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/suspend]
 binding='<Super>ISO_Level3_Shift'
 command='sh -c "[ -d /sys/class/power_supply/BAT0 ] && systemctl suspend"'

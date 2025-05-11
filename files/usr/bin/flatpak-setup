@@ -75,15 +75,3 @@ do
         $A
     fi
 done
-
-for H in /home/*
-do
-    cd $H
-    U=${H##*/}
-
-    [[ -f .config/MangoHud/MangoHud.conf ]] && continue
-
-    mkdir -p              .config/MangoHud
-    cp /etc/MangoHud.conf .config/MangoHud/
-    chown -R $U:$U        .config/MangoHud/
-done
