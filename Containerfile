@@ -36,15 +36,16 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     dnf remove  -y ffmpeg-free libav{codec,format,filter,device,util}-free libsw{scale,resample}-free libpostproc-free && \
     dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-42.noarch.rpm                         \
                    https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-42.noarch.rpm                && \
-    dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                         \
-                   {h,b}top strace socat iotop-c nethogs nmap smartmontools sg3_utils \
-                   tmux nnn rclone neovim ripgrep fzf pwgen aria2                     \
-                   unrar p7zip-plugins bsdtar tesseract                               \
-                   ffmpeg compat-ffmpeg4 mediainfo mkvtoolnix intel-media-driver      \
-                   cargo fontconfig-devel pipx uv python3-devel cmake meson perf      \
-                   wireguard-tools msmtp golang-github-acme-lego                      \
-                   gamescope mangohud vulkan-tools igt-gpu-tools freerdp           && \
-    setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop      && \
+    dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                    \
+                   {h,b}top strace socat iotop-c nethogs nmap                    \
+                   smartmontools sg3_utils android-tools                         \
+                   tmux nnn rclone neovim ripgrep fzf pwgen aria2                \
+                   unrar p7zip-plugins bsdtar tesseract                          \
+                   ffmpeg compat-ffmpeg4 mediainfo mkvtoolnix intel-media-driver \
+                   cargo fontconfig-devel pipx uv python3-devel cmake meson perf \
+                   wireguard-tools msmtp golang-github-acme-lego                 \
+                   gamescope mangohud vulkan-tools igt-gpu-tools freerdp      && \
+    setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop && \
     echo NoDisplay=true | tee -a /usr/share/applications/{nvim,htop}.desktop >/dev/null
 RUN fix() { cat /etc/$1 >>/usr/lib/$1; cp /dev/null /etc/$1; } && \
     fix passwd                                                 && \
