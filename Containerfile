@@ -36,7 +36,7 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     dnf remove  -y ffmpeg-free libav{codec,format,filter,device,util}-free libsw{scale,resample}-free libpostproc-free && \
     curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-multimedia.repo                        && \
     dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                         \
-                   {h,b}top strace socat iotop-c nethogs nmap                         \
+                   {h,b}top strace socat iotop-c nethogs nmap wev                     \
                    smartmontools sg3_utils android-tools                              \
                    tmux nnn rclone neovim ripgrep fzf pwgen aria2                     \
                    unrar p7zip-plugins bsdtar tesseract                               \
