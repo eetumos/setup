@@ -34,6 +34,7 @@ export EDITOR=nvim
 
 #### aliases ####
 alias d="lsblk -do NAME,SIZE,TRAN,MODEL,SERIAL,WWN"
+alias i="systemd-inhibit --what=sleep:handle-lid-switch sleep inf"
 alias l="ls -lh --color=auto --hyperlink=auto"
 alias r="rsync -rltPhv --inplace --copy-devices --mkpath --timeout=30"
 alias s="ssh $s"
