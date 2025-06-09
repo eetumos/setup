@@ -35,15 +35,12 @@ RUN depmod $(rpm -q --qf %{version}-%{release}.%{arch} kernel)
 RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z            \
     dnf remove  -y ffmpeg-free libav{codec,format,filter,device,util}-free libsw{scale,resample}-free libpostproc-free && \
     curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-multimedia.repo                        && \
-    dnf install -y ffmpeg                                                                                              && \
-    dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-42.noarch.rpm                         \
-                   https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-42.noarch.rpm                && \
     dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                         \
                    {h,b}top strace socat iotop-c nethogs nmap wev                     \
                    smartmontools sg3_utils android-tools                              \
                    tmux nnn rclone neovim ripgrep fzf pwgen aria2                     \
                    unrar p7zip-plugins bsdtar tesseract                               \
-                   mediainfo mkvtoolnix intel-media-driver                            \
+                   ffmpeg mediainfo mkvtoolnix libva-intel-media-driver               \
                    cargo fontconfig-devel pipx uv python3-devel cmake meson perf      \
                    wireguard-tools msmtp golang-github-acme-lego                      \
                    gamescope mangohud vulkan-tools igt-gpu-tools freerdp           && \
