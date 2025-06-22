@@ -38,7 +38,7 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                         \
                    {h,b}top strace socat iotop-c nethogs nmap wev                     \
                    smartmontools sg3_utils android-tools                              \
-                   tmux nnn rclone neovim ripgrep fzf pwgen aria2                     \
+                   tmux nnn rclone neovim ripgrep fzf pwgen git-lfs aria2             \
                    unrar p7zip-plugins bsdtar tesseract                               \
                    ffmpeg mediainfo mkvtoolnix openh264 libva-intel-media-driver      \
                    cargo fontconfig-devel pipx uv python3-devel cmake meson perf      \
