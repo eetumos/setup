@@ -66,6 +66,10 @@ o() {
     tmux send-keys    -to ' clear; readarray -t m < <(ollama list | tail -n+2 | cut -d" " -f1); [[ ${#m[@]} -ne 1 ]] && select m in "${m[@]}"; do break; done; exec ollama run $m' Enter
     tmux attach       -to 
 }
+fav() {
+    local input=$1 name=${1##*/} name=${name%.*} output=${2:-$name-fav.mp4} crf=${3:-35} preset=${4:-4}
+    ffmpeg -i "$file" -c:v libsvtav1 -preset $preset -crf $crf -svtav1-params tune=0 "$output"
+}
 fs() {
     local F="$1" N="${1##*/}" VC=${2:-hevc} Q=${3:-30} S="${4/#[1-9]*/-vf scale_cuda=&:-1}" L=4
 
