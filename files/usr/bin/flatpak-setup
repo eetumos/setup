@@ -28,6 +28,7 @@ APP=(org.gnome.baobab
 
      org.libreoffice.LibreOffice
      org.gimp.GIMP
+     org.inkscape.Inkscape
      net.ankiweb.Anki
 
      com.github.tchx84.Flatseal
