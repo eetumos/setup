@@ -8,7 +8,7 @@ ENV PATH=/tmp:/usr/bin
 
 
 ### NOTE: kernel ###
-ARG KERNEL=6.14
+ARG KERNEL=6.15
 RUN if [[ $(rpm -q --qf %{version} kernel) > $KERNEL.999 ]]; then                                          \
         rpm-ostree uninstall -y kernel{,-core} kernel-modules{,-core,-extra} virtualbox-guest-additions && \
         rpm-ostree   install -y kernel{,-modules-extra}-$KERNEL.*                                       && \
