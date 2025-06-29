@@ -32,19 +32,21 @@ RUN depmod $(rpm -q --qf %{version}-%{release}.%{arch} kernel)
 
 
 ### NOTE: userland ###
-RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z            \
-    dnf remove  -y ffmpeg-free libav{codec,format,filter,device,util}-free libsw{scale,resample}-free libpostproc-free && \
-    curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-multimedia.repo                        && \
-    dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                         \
-                   {h,b}top strace socat iotop-c nethogs nmap wev                     \
-                   smartmontools sg3_utils android-tools                              \
-                   tmux nnn rclone neovim ripgrep fzf pwgen git-lfs aria2             \
-                   unrar p7zip-plugins bsdtar tesseract                               \
-                   ffmpeg mediainfo mkvtoolnix openh264 libva-intel-media-driver      \
-                   cargo fontconfig-devel pipx uv python3-devel cmake meson perf      \
-                   wireguard-tools msmtp golang-github-acme-lego                      \
-                   gamescope mangohud vulkan-tools igt-gpu-tools freerdp           && \
-    setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop      && \
+RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
+    curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-multimedia.repo             && \
+    dnf update -y
+
+RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
+    dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                                                  \
+                   {h,b}top strace socat iotop-c nethogs nmap wev                                              \
+                   smartmontools sg3_utils android-tools                                                       \
+                   tmux nnn rclone neovim ripgrep fzf pwgen git-lfs aria2                                      \
+                   unrar p7zip-plugins bsdtar tesseract                                                        \
+                   mediainfo mkvtoolnix                                                                        \
+                   cargo fontconfig-devel pipx uv python3-devel cmake meson perf                               \
+                   wireguard-tools msmtp golang-github-acme-lego                                               \
+                   gamescope mangohud vulkan-tools igt-gpu-tools freerdp                                    && \
+    setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop                               && \
     echo NoDisplay=true | tee -a /usr/share/applications/{nvim,htop}.desktop >/dev/null
 RUN fix() { cat /etc/$1 >>/usr/lib/$1; cp /dev/null /etc/$1; } && \
     fix passwd                                                 && \
