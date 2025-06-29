@@ -32,6 +32,9 @@ RUN depmod $(rpm -q --qf %{version}-%{release}.%{arch} kernel)
 
 
 ### NOTE: userland ###
+RUN dnf install -y iwd && \
+    dnf remove  -y wpa_supplicant
+
 RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
     curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-multimedia.repo             && \
     dnf update -y
