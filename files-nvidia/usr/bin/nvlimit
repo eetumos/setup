@@ -2,25 +2,25 @@
 import os, subprocess, sys, time
 from pynvml import *
 
-if 'nvl' not in os.environ or sys.argv[1:] not in (['off'], ['on']):
-    print('USAGE: nvl=CONFIG nvlimit off|on')
+if sys.argv[1:] not in (['off'], ['on']):
+    print('USAGE: nvlimit off|on')
     sys.exit(1)
 
-seat = 'seat' in os.environ and subprocess.check_output(['loginctl', 'seat-status', os.environ.get('seat')])
+config = []
+if 'nvl' in os.environ:
+    config = os.environ.get('nvl').split(',')
+elif os.path.exists('/etc/nvlimit'):
+    config = list(open('/etc/nvlimit'))
+config = list(filter(None, config))
+
+if not config:
+    sys.exit(0)
+
 nvmlInit()
 
-def apply(busid, config):
+def apply(busid, fan, power, offset):
     dev  = nvmlDeviceGetHandleByPciBusId(busid)
     fans = nvmlDeviceGetNumFans(dev)
-
-    fan    = 0
-    power  = nvmlDeviceGetPowerManagementDefaultLimit(dev)
-    offset = 0
-
-    if sys.argv[1] == 'on':
-        if len(config) >= 1: fan    = int(config[0])
-        if len(config) >= 2: power  = int(config[1]) * 1000
-        if len(config) >= 3: offset = int(config[2])
 
     if fan == 0:
         for i in range(fans):
@@ -33,13 +33,18 @@ def apply(busid, config):
         for i in range(fans):
             nvmlDeviceSetFanSpeed_v2(dev, i, fan)
 
+    if power == 0:
+        power = nvmlDeviceGetPowerManagementDefaultLimit(dev)
     nvmlDeviceSetPowerManagementLimit(dev, power)
+
     nvmlDeviceSetGpcClkVfOffset(dev, offset)
 
-for gpu in os.environ.get('nvl').split(','):
-    busid, *config = gpu.split('|')
+for entry in config:
+    busid, fan, power, offset = entry.split('|')
 
-    if seat and f"/{busid}/drm".encode() not in seat:
-        continue
+    if sys.argv[1] == 'off':
+        fan    = 0
+        power  = 0
+        offset = 0
 
-    apply(busid, config)
+    apply(busid, int(fan), int(power) * 1000, int(offset))
