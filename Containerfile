@@ -56,6 +56,21 @@ RUN --mount=type=bind,src=patches/rpm,dst=patches,z \
     dnf reinstall -y *.rpm                       && \
     rm               *.rpm
 
+RUN dnf copr enable -y iucar/rstudio && \
+    dnf install -y rstudio-desktop {R,libcurl,fribidi,libtiff}-devel
+
+RUN CARGO_HOME=cargo-home cargo install --locked --root=/usr --no-track dufs tokei fclones binwalk && \
+    rm -r cargo-home
+
+RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man  \
+    pipx install --global yt-dlp[default,secretstorage,curl-cffi] ocrmypdf pgsrip icoextract \
+                          pulsemixer liquidctl undervolt
+
+RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip | bsdtar xC /usr/bin --strip-components=1 && \
+    chmod 755 /usr/bin/bun
+
+RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit
+
 RUN --mount=type=bind,src=patches/monado,dst=patches,z                                                                           \
     dnf install -y {openxr,vulkan-loader,wayland,wayland-protocols,systemd,libdrm,hidapi,libusb1,libv4l,eigen3}-devel glslang && \
     git clone --recurse-submodules https://gitlab.freedesktop.org/monado/monado.git                                           && \
@@ -66,21 +81,6 @@ RUN --mount=type=bind,src=patches/monado,dst=patches,z                          
     cmake --build   build -j                                                                                                  && \
     cmake --install build                                                                                                     && \
     cd .. && rm -r monado
-
-RUN dnf copr enable -y iucar/rstudio && \
-    dnf install -y rstudio-desktop {R,libcurl,fribidi,libtiff}-devel
-
-RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip | bsdtar xC /usr/bin --strip-components=1 && \
-    chmod 755 /usr/bin/bun
-
-RUN CARGO_HOME=cargo-home cargo install --no-track --root=/usr dufs tokei fclones binwalk && \
-    rm -r cargo-home
-
-RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man  \
-    pipx install --global yt-dlp[default,secretstorage,curl-cffi] ocrmypdf pgsrip icoextract \
-                          pulsemixer liquidctl undervolt
-
-RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit
 
 RUN curl -sLOOO -o date-menu-formatter@marcinjakubowski.github.com.strip.zip -o lan-ip-address@mrhuber.com.strip.zip                                  \
         https://github.com/eetumos/battery-time/releases/latest/download/battery-time@eetumos.github.com.shell-extension.zip                          \
