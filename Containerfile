@@ -73,6 +73,14 @@ RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x
 RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit && \
     chmod +x  /usr/bin/kepubify
 
+RUN dnf install -y ncurses-devel                                                                            && \
+    curl -sL https://github.com/samtools/samtools/releases/latest/download/samtools-1.22.1.tar.bz2 | tar xj && \
+    cd samtools-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r samtools-*      && \
+    curl -sL https://github.com/samtools/bcftools/releases/latest/download/bcftools-1.22.tar.bz2   | tar xj && \
+    cd bcftools-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r bcftools-*      && \
+    curl -sL https://github.com/samtools/htslib/releases/latest/download/htslib-1.22.1.tar.bz2     | tar xj && \
+    cd   htslib-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r   htslib-*
+
 RUN --mount=type=bind,src=patches/monado,dst=patches,z                                          \
     dnf install -y {eigen3,hidapi,openxr,systemd,vulkan-loader,wayland,wayland-protocols}-devel \
                    lib{drm,glvnd,usb1,v4l}-devel glslang                                     && \
