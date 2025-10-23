@@ -59,6 +59,10 @@ RUN --mount=type=bind,src=patches/rpm,dst=patches,z \
 RUN dnf copr enable -y iucar/rstudio && \
     dnf install -y rstudio-desktop {R,libcurl,fribidi,libtiff}-devel
 
+RUN dnf copr enable -y eetumos/wpewebkit        && \
+    dnf install -y wpewebkit wpebackend-fdo cog && \
+    ln -s /usr/lib64/libWPEBackend-fdo-1.0.so{.1,}
+
 RUN CARGO_HOME=cargo-home cargo install --locked --root=/usr --no-track dufs tokei fclones binwalk && \
     rm -r cargo-home
 
@@ -80,15 +84,15 @@ RUN dnf install -y ncurses-devel                                                
     curl -sL https://github.com/samtools/htslib/releases/latest/download/htslib-1.22.1.tar.bz2     | tar xj && \
     cd   htslib-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r   htslib-*
 
-RUN --mount=type=bind,src=patches/monado,dst=patches,z                                                                           \
-    dnf install -y {openxr,vulkan-loader,wayland,wayland-protocols,systemd,libdrm,hidapi,libusb1,libv4l,eigen3}-devel glslang && \
-    git clone --recurse-submodules https://gitlab.freedesktop.org/monado/monado.git                                           && \
-    cd monado                                                                                                                 && \
-    for P in ../patches/*; do git apply $P; done                                                                              && \
-    cmake  -B       build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF -DXRT_HAVE_XLIB=OFF         \
-                          -DXRT_FEATURE_SERVICE=OFF                                                                           && \
-    cmake --build   build -j                                                                                                  && \
-    cmake --install build                                                                                                     && \
+RUN --mount=type=bind,src=patches/monado,dst=patches,z                                                                                       \
+    dnf install -y {eigen3,hidapi,libdrm,libusb1,libv4l,mesa-libEGL,openxr,systemd,vulkan-loader,wayland,wayland-protocols}-devel glslang && \
+    git clone --recurse-submodules https://gitlab.freedesktop.org/monado/monado.git                                                       && \
+    cd monado                                                                                                                             && \
+    for P in ../patches/*; do git apply $P; done                                                                                          && \
+    cmake  -B       build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF -DXRT_HAVE_XLIB=OFF                     \
+                          -DXRT_FEATURE_SERVICE=OFF                                                                                       && \
+    cmake --build   build -j                                                                                                              && \
+    cmake --install build                                                                                                                 && \
     cd .. && rm -r monado
 
 RUN curl -sLOOO -o date-menu-formatter@marcinjakubowski.github.com.strip.zip -o lan-ip-address@mrhuber.com.strip.zip                                  \
