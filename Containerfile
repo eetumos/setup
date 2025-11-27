@@ -1,5 +1,5 @@
 ### NOTE: common ###
-FROM quay.io/fedora/fedora-silverblue:42 AS common
+FROM quay.io/fedora/fedora-silverblue:43 AS common
 RUN dnf remove -y gnome-software{,-rpm-ostree} firefox{,-langpacks} yelp
 ENV PATH=/usr/bin
 
@@ -9,7 +9,7 @@ COPY build-env/uname /usr/bin/uname
 
 
 ### NOTE: kernel ###
-ARG KERNEL=6.16
+ARG KERNEL=6.17
 RUN if [[ $(rpm -q --qf %{version} kernel) > $KERNEL.999 ]]; then                                          \
         rpm-ostree uninstall -y kernel{,-core} kernel-modules{,-core,-extra} virtualbox-guest-additions && \
         rpm-ostree   install -y kernel{,-modules-extra}-$KERNEL.*                                       && \
@@ -18,7 +18,7 @@ RUN if [[ $(rpm -q --qf %{version} kernel) > $KERNEL.999 ]]; then               
 
 RUN dnf install -y kernel-devel-matched "kernel-headers <= $(rpm -q --qf %{version} kernel)" rpm-build
 
-RUN dnf install -y https://zfsonlinux.org/fedora/zfs-release-2-8$(rpm -E %dist).noarch.rpm && \
+RUN dnf install -y https://zfsonlinux.org/fedora/zfs-release-3-0$(rpm -E %dist).noarch.rpm && \
     dnf install -y zfs
 
 RUN curl -sL https://github.com/BoukeHaarsma23/zenergy/archive/master.tar.gz | tar xz && \
@@ -62,7 +62,8 @@ RUN dnf copr enable -y iucar/rstudio && \
 RUN CARGO_HOME=cargo-home cargo install --locked --root=/usr --no-track dufs tokei fclones binwalk && \
     rm -r cargo-home
 
-RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man  \
+RUN dnf install -y libusb1-devel systemd-devel                                            && \
+    PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man  \
     pipx install --global yt-dlp[default,secretstorage,curl-cffi] ocrmypdf pgsrip icoextract \
                           pulsemixer liquidctl undervolt
 
@@ -93,7 +94,7 @@ RUN --mount=type=bind,src=patches/monado,dst=patches,z                          
 
 RUN curl -sLOOO -o date-menu-formatter@marcinjakubowski.github.com.strip.zip -o lan-ip-address@mrhuber.com.strip.zip                                  \
         https://github.com/eetumos/battery-time/releases/latest/download/battery-time@eetumos.github.com.shell-extension.zip                          \
-        https://github.com/Leleat/Tiling-Assistant/releases/download/v52/tiling-assistant@leleat-on-github.shell-extension.zip                        \
+        https://github.com/Leleat/Tiling-Assistant/releases/latest/download/tiling-assistant@leleat-on-github.shell-extension.zip                     \
         https://github.com/stuarthayhurst/alphabetical-grid-extension/releases/latest/download/AlphabeticalAppGrid@stuarthayhurst.shell-extension.zip \
         https://github.com/marcinjakubowski/date-menu-formatter/archive/master.zip                                                                    \
         https://github.com/Josholith/gnome-extension-lan-ip-address/archive/master.zip                                                             && \
@@ -107,7 +108,6 @@ RUN curl -sLO --output-dir /usr/share/fonts https://github.com/dmlls/whatsapp-em
 ### NOTE: base ###
 FROM common AS base
 
-RUN ! [ -f /usr/lib/udev/rules.d/60-persistent-hidraw.rules ]
 COPY files/ /
 RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update
 
@@ -133,6 +133,5 @@ RUN --mount=type=cache,dst=.                                                    
     tar xf ollama-linux-amd64.tgz --exclude=libcu*.so*                                                                          && \
     mv bin/ollama /usr/bin/ && mv lib/ollama /usr/lib/ && rm -r bin lib
 
-RUN ! [ -f /usr/lib/udev/rules.d/60-persistent-hidraw.rules ]
 COPY files/ files-nvidia/ /
 RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update

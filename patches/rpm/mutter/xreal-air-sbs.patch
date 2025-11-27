@@ -1,8 +1,8 @@
 diff --git a/src/backends/native/meta-kms-connector.c b/src/backends/native/meta-kms-connector.c
-index 24d3eed..fe01aac 100644
+index c969f45..27ebfbd 100644
 --- a/src/backends/native/meta-kms-connector.c
 +++ b/src/backends/native/meta-kms-connector.c
-@@ -22,6 +22,10 @@
+@@ -21,6 +21,10 @@
  #include "backends/native/meta-kms-connector-private.h"
  
  #include <errno.h>
@@ -11,8 +11,8 @@ index 24d3eed..fe01aac 100644
 +#include <libdisplay-info/edid.h>
 +#include <libdisplay-info/info.h>
  
+ #include "backends/meta-connector.h"
  #include "backends/native/meta-kms-crtc.h"
- #include "backends/native/meta-kms-device-private.h"
 @@ -175,6 +179,12 @@ gboolean
  meta_kms_connector_is_non_desktop (MetaKmsConnector *connector)
  {
