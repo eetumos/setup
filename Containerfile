@@ -117,10 +117,10 @@ RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update
 FROM common AS nvidia
 
 RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
-    --mount=type=bind,src=files-nvidia/etc/nvidia/kernel.conf,dst=/etc/nvidia/kernel.conf,z                    \
-    dnf install -y nvidia-driver{,-libs.i686} dkms-nvidia cuda{,-cudnn}                                        \
-                   nvidia-settings golang-github-nvidia-container-toolkit nvtop                             && \
-    rm -f /etc/nvidia/kernel.conf.rpmnew                                                                    && \
+    curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-nvidia-580.repo             && \
+    dnf install -y --disable-repo=fedora-multimedia nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
+    dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
+    dnf install -y cuda{,-cudnn} golang-github-nvidia-container-toolkit nvtop                               && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
 
 RUN python -m venv /usr/lib/nvidia-venv && /usr/lib/nvidia-venv/bin/pip install nvidia-ml-py
