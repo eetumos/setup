@@ -120,14 +120,27 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-nvidia-580.repo             && \
     dnf install -y --disable-repo=fedora-multimedia nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
     dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
-    dnf install -y cuda{,-cudnn} golang-github-nvidia-container-toolkit nvtop                               && \
+    dnf install -y cuda{,-cudnn,-cupti} libcusparselt golang-github-nvidia-container-toolkit nvtop          && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
 
-RUN python -m venv /usr/lib/nvidia-venv && /usr/lib/nvidia-venv/bin/pip install nvidia-ml-py
+RUN --mount=type=cache,dst=/.cache/pip                                                    \
+    dnf install -y python3.10-devel                                                    && \
+    python3.10 -m venv /usr/lib/nvidia-venv                                            && \
+    source             /usr/lib/nvidia-venv/bin/activate                               && \
+    pip download --index-url=https://download.pytorch.org/whl/cu130 --no-deps torch    && \
+    torch=$(unzip -p torch-*.whl torch-*/METADATA)                                     && \
+    for p in $(rg -oP 'Requires-Dist: \Knvidia-(cu)?(blas|da-cupti|da-nvrtc|da-runtime|dnn|fft|file|pti|rand|solver|sparse|nvjitlink).*?(?=;)' <<< $torch | sed -e 's/-/_/g' -e 's/==/-/'); \
+    do                                                                                    \
+        mkdir /usr/lib/nvidia-venv/lib64/python3.10/site-packages/$p.dist-info         && \
+        touch /usr/lib/nvidia-venv/lib64/python3.10/site-packages/$p.dist-info/METADATA ; \
+    done                                                                               && \
+    pip install --index-url=https://download.pytorch.org/whl/cu130 torch-*.whl            \
+        -c <(echo torch==$(rg -oP '^Version: \K.*$' <<< $torch))                       && \
+    pip install nvidia-ml-py nemo_toolkit[asr]                                         && \
+    rm torch-*.whl
 
-RUN dnf install -y python3.12                                                            && \
-    PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man \
-    pipx install --global --python=python3.12 whisper-ctranslate2
+RUN PIPX_GLOBAL_HOME=/usr/lib/pipx PIPX_GLOBAL_BIN_DIR=/usr/bin PIPX_MAN_DIR=/usr/share/man \
+    pipx install --global --python=python3.10 whisper-ctranslate2
 
 RUN --mount=type=cache,dst=.                                                                              \
     if ! [ -f ollama-linux-amd64.tar.zst ]                                                              ; \
