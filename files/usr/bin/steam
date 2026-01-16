@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+export XR_RUNTIME_JSON=/run/host/usr/share/openxr/1/openxr_monado.json
+export PRESSURE_VESSEL_FILESYSTEMS_RW=$XDG_RUNTIME_DIR/monado_comp_ipc
+export VR_OVERRIDE=/run/host/usr/lib64/xrizer
+
+exec /usr/lib/steam/bin_steam.sh
