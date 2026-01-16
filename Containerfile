@@ -102,6 +102,9 @@ RUN --mount=type=bind,src=patches/monado,dst=patches,z                          
 RUN curl -sL https://nightly.link/Supreeeme/xrizer/workflows/ci/main/xrizer-nightly-release.zip | bsdtar xC /usr/lib64 && \
     chmod +x /usr/lib64/xrizer/bin/linux64/vrclient.so
 
+RUN dnf copr enable -y eetumos/wpewebkit && \
+    dnf install -y wpewebkit
+
 RUN rew=$(curl https://roomeqwizard.com/installers/ | rg -o 'REW_linux_no_jre.*\.sh' | sort -Vr | head -n1) && \
     curl -o rew https://roomeqwizard.com/installers/$rew                                                    && \
     sed -i 's/-gt "17"/= ""/g' rew                                                                          && \
