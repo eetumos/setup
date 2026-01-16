@@ -88,7 +88,7 @@ RUN --mount=type=bind,src=patches/monado,dst=patches,z                          
     cd monado                                                                                && \
     for P in ../patches/*; do git apply $P; done                                             && \
     cmake  -B       build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr                \
-                          -DBUILD_TESTING=OFF -DXRT_FEATURE_SERVICE=OFF                      && \
+                          -DBUILD_TESTING=OFF -DXRT_FEATURE_SERVICE=ON                       && \
     cmake --build   build -j                                                                 && \
     cmake --install build                                                                    && \
     cd .. && rm -r monado
