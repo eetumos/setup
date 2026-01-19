@@ -1,0 +1,166 @@
+#!/usr/bin/bash
+set -e
+
+fail() {
+    echo pup: "$@"
+    exit 1
+}
+
+
+### environment ###
+data=${data:-/var/lib/pup}
+games=${games:-/var/opt/pup}
+prefix=${prefix:-~/.local/share/pup}
+proton=${proton:-GE-Proton}
+
+case $proton in
+    umu) proton=UMU-Proton ;;
+    ge) proton=GE-Proton ;;
+esac
+
+
+### arguments ###
+for arg in update wayland gamescope
+do
+    if [[ $1 = --$arg ]]
+    then
+        shift
+        declare $arg=1
+    else
+        declare $arg=0
+    fi
+done
+
+if [[ $wayland = 1 ]] && [[ $gamescope = 1 ]]
+then
+    fail "--wayland and --gamescope are mutually exclusive"
+fi
+
+
+### setup ###
+if [[ $update = 1 ]]
+then
+    mkdir -p $data 2>/dev/null || pkexec sh -c "mkdir -p $data && chown $USER:$USER $data"
+fi
+
+
+### proton ###
+if [[ $update = 1 ]]
+then
+    latest_release() {
+        curl -sw %header{location} https://github.com/$1/releases/latest | sed 's|.*/||'
+    }
+    case $proton in
+        UMU-Proton) proton=$(latest_release Open-Wine-Components/umu-proton) ;&
+        UMU-Proton*) proton_url=https://github.com/Open-Wine-Components/umu-proton/releases/download/$proton/$proton.tar.gz ;;
+    
+        GE-Proton) proton=$(latest_release GloriousEggroll/proton-ge-custom) ;&
+        GE-Proton*) proton_url=https://github.com/GloriousEggroll/proton-ge-custom/releases/download/$proton/$proton.tar.gz ;;
+    
+        *) fail "unrecognized proton=$proton"
+    esac
+    
+    if ! [[ -d $data/proton/$proton ]]
+    then
+        echo "downloading $proton:"
+        mkdir -p $data/proton/$proton
+        curl -L $proton_url | tar xzC $data/proton/$proton --strip-components=1
+    fi
+else
+    p=$(find $data/proton -maxdepth 1 -type d -name "$proton*" | sort -Vr | head -n1)
+
+    if [[ -z $p ]]
+    then
+        fail "can't find $data/proton/$proton*"
+    fi
+
+    proton=${p##*/}
+fi
+
+
+### runtime ###
+runtime_appid=$(rg -oP "require_tool_appid.*?\K[0-9]+" $data/proton/$proton/toolmanifest.vdf)
+case $runtime_appid in
+    1628350) runtime=steamrt3 runtime_url=https://repo.steampowered.com/steamrt3/images/latest-public-beta/SteamLinuxRuntime_sniper.tar.xz ;;
+    *) fail "unrecognized runtime_appid=$runtime_appid"
+esac
+
+if [[ $update = 1 ]]
+then
+    if [[ -d $data/runtime/$runtime ]] && ! rg -Fq $(curl -s ${runtime_url%/*}/VERSION.txt) $data/runtime/$runtime/VERSIONS.txt
+    then
+        rm -r $data/runtime/$runtime
+    fi
+    
+    if ! [[ -d $data/runtime/$runtime ]]
+    then
+        echo "downloading $runtime:"
+        mkdir -p $data/runtime/$runtime
+        curl $runtime_url | tar xJC $data/runtime/$runtime --strip-components=1
+        ln -sf /dev/null $data/runtime/$runtime/*platform*/.ref
+    fi
+fi
+
+
+### execution ###
+if [[ $# -gt 0 ]]
+then
+    export PRESSURE_VESSEL_FILESYSTEMS_RO=$PRESSURE_VESSEL_FILESYSTEMS_RO:$data
+    export PRESSURE_VESSEL_VARIABLE_DIR=~/.cache/pup
+
+    mkdir -p $prefix
+    ln -sfn . $prefix/pfx
+    export STEAM_COMPAT_DATA_PATH=$prefix
+    export STEAM_COMPAT_CLIENT_INSTALL_PATH=
+    export SteamGameId=${SteamGameId:-0}
+
+    export DXVK_HDR=1
+
+    if ! vulkaninfo 2>/dev/null | rg -q VK_KHR_maintenance5
+    then
+        export PROTON_USE_WINED3D=1
+    fi
+
+    proton=( $data/runtime/$runtime/_v2-entry-point -- $data/proton/$proton/proton waitforexitandrun )
+
+    if [[ $wayland = 1 ]]
+    then
+        export PROTON_ENABLE_WAYLAND=1
+    fi
+
+    if [[ $gamescope = 1 ]]
+    then
+        if [[ $XDG_CURRENT_DESKTOP = GNOME ]]
+        then
+            read GNOME_{WIDTH,HEIGHT,REFRESH} \
+                < <(gdctl show | grep -o "[0-9]*x[0-9]*@[0-9.]*" | tr x@ " " | sort -nr | head -1)
+
+            GAMESCOPE_WIDTH=${GAMESCOPE_WIDTH:-$GNOME_WIDTH}
+            GAMESCOPE_HEIGHT=${GAMESCOPE_HEIGHT:-$GNOME_HEIGHT}
+            GAMESCOPE_REFRESH=${GAMESCOPE_REFRESH:-$GNOME_REFRESH}
+        fi
+        if [[ -z $GAMESCOPE_WIDTH ]] || [[ -z $GAMESCOPE_HEIGHT ]] || [[ -z $GAMESCOPE_REFRESH ]]
+        then
+            fail missing GAMESCOPE_{WIDTH,HEIGHT,REFRESH}
+        fi
+
+        export XKB_DEFAULT_LAYOUT=${XKB_DEFAULT_LAYOUT:-$(localectl | grep -oP "X11 Layout: \K.*")}
+        proton=( gamescope -f -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT -r $GAMESCOPE_REFRESH --mangoapp --force-grab-cursor --hdr-enabled --hdr-debug-force-support "${proton[@]}" )
+    else
+        proton=( mangohud "${proton[@]}" )
+    fi
+
+    if [[ -f $games/$1/exe ]]
+    then
+        if [[ -f $games/$1/env ]]
+        then
+            export $(< "$games/$1/env")
+        fi
+
+        set -- "$(realpath "$games/$1/exe")" "${@:2}"
+    fi
+
+    # TODO: test wolf
+    # TODO: use tini
+    exec "${proton[@]}" "$@"
+fi
