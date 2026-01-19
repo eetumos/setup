@@ -1,0 +1,59 @@
+#!/usr/bin/bash
+set -e
+
+
+### environment ###
+games=${games:-/var/opt/pup}
+applications=${applications:-/usr/local/share/applications/pup}
+
+if command -v pup >/dev/null
+then
+    pup=pup
+else
+    pup=$(realpath ${0%pup-desktop}pup)
+fi
+
+
+### permissions ###
+if ! mkdir -p $applications 2>/dev/null
+then
+    pkexec sh -c "mkdir -p $applications && chown $USER:$USER $applications"
+fi
+if ! [[ -w $applications ]]
+then
+    pkexec chown -R $USER:$USER $applications
+fi
+
+
+### install ###
+for dir in $games/*
+do
+    name=${dir##*/}
+
+    cat <<-EOF >$applications/"$name".desktop
+		[Desktop Entry]
+		Type=Application
+		Name=$name
+		Categories=Game
+		Exec=$pup "$name"
+		Icon=$games/$name/icon.png
+	EOF
+
+    echo "wrote: '$applications/$name.desktop'"
+done
+
+
+### uninstall ###
+for file in $applications/*.desktop
+do
+    name=${file##*/} name=${name%.desktop}
+
+    if [[ -d $games/$name ]]
+    then
+        continue
+    fi
+
+    rm $file
+
+    echo "removed: '$applications/$name.desktop'"
+done
