@@ -1,0 +1,104 @@
+#!/usr/bin/bash
+set -ex
+
+fail() {
+    echo pup-install: "$@"
+    exit 1
+}
+
+
+### environment ###
+games=${games:-/var/opt/pup}
+export prefix=$games/.pup-install
+
+pup=${0%pup-install}pup
+
+name=$1
+shift
+
+
+### permissions ###
+if ! mkdir -p $games 2>/dev/null
+then
+    pkexec sh -c "mkdir -p $games && chown $USER:$USER $games"
+fi
+if ! [[ -w $games ]]
+then
+    pkexec chown -R $USER:$USER $games
+fi
+
+
+### install ###
+if [[ $# -gt 0 ]]
+then
+    mkdir -p "$games/$name/files" $prefix/dosdevices
+    ln  -sfT "$games/$name/files" $prefix/dosdevices/p:
+    $pup "$@"
+fi
+
+
+### postprocess ###
+if ! [[ -d $games/$name/files ]]
+then
+    fail "pre-existing install not found"
+fi
+cd "$games/$name"
+
+sel() {
+    input=$(< /dev/stdin)
+    title=$1
+    shift
+
+    if [[ -z $input ]]
+    then
+        return 1
+    fi
+
+    fzf --query="$name" --ignore-case --select-1 --header="$title" "$@" <<< "$input"
+}
+
+if ! [[ -e exe ]]
+then
+    if lnk=$(find $prefix/drive_c/users -iname '*.lnk' | sel lnk)
+    then
+        if exe=$(strings "$lnk" | rg -i '.:\\.*\.exe' | sel exe)
+        then
+            exe=${exe//\\//}
+            exe=$prefix/dosdevices/${exe,}
+        fi
+    fi
+
+    if [[ -z $exe ]]
+    then
+        exe=$(find files/ -iname '*.exe' | sel exe || true)
+    fi
+
+    if [[ -z $exe ]]
+    then
+        fail "failed to locate exec"
+    fi
+
+    ln -sr "$exe" exe
+fi
+
+if ! [[ -f icon.png ]]
+then
+    icoextract exe icon.ico
+
+    mkdir -p icons
+    magick icon.ico icons/icon.png
+
+    mv "$(du -b icons/* | sort -nr | head -1 | cut -f2)" icon.png
+    rm -rf icon.ico icons
+fi
+
+if ! [[ -f cover.png ]]
+then
+    gamedb=https://raw.githubusercontent.com/LizardByte/GameDB/gh-pages
+
+    bucket=$(echo "${name,,}" | rg -oP '^[a-z0-9][a-z0-9]?' || true)
+    id=$(curl -s $gamedb/buckets/${bucket:-@}.json | jq -r 'keys[] as $k | $k + " " + .[$k].name' | sel cover --accept-nth=1 --with-nth={2..})
+    slug=$(curl -s $gamedb/games/$id.json | jq -r '.cover.url | split("/")[-1] | split(".")[0]')
+
+    curl -so cover.png https://images.igdb.com/igdb/image/upload/t_cover_big_2x/$slug.png
+fi
