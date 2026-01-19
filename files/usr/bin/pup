@@ -1,0 +1,199 @@
+#!/usr/bin/bash
+set -e
+
+fail() {
+    echo pup: "$@"
+    exit 1
+}
+
+
+### environment ###
+data=${data:-/var/lib/pup}
+games=${games:-/var/opt/pup}
+prefix=${prefix:-~/.local/share/pup}
+proton=${proton:-GE-Proton}
+verb=${verb:-waitforexitandrun}
+
+flags=()
+while [[ $1 = --* ]]
+do
+    flags+=( ${1#--} )
+    shift
+done
+
+if [[ -f $games/$1/exe ]]
+then
+    if [[ -f $games/$1/env ]]
+    then
+        export $(< "$games/$1/env")
+    fi
+
+    set -- "$(realpath "$games/$1/exe")" "${@:2}"
+fi
+
+for flag in update wayland gamescope
+do
+    if [[ ${!flag} = 1 ]] || [[ " ${flags[*]} " =~ " $flag " ]]
+    then
+        declare $flag=1
+    else
+        declare $flag=0
+    fi
+done
+
+if [[ $wayland = 1 ]] && [[ $gamescope = 1 ]]
+then
+    fail "--wayland and --gamescope are mutually exclusive"
+fi
+
+case $proton in
+    umu) proton=UMU-Proton ;;
+    ge) proton=GE-Proton ;;
+esac
+
+export -n data games prefix proton verb update wayland gamescope
+
+
+### update: permissions ###
+if [[ $update = 1 ]]
+then
+    if ! mkdir -p $data 2>/dev/null
+    then
+        pkexec sh -c "mkdir -p $data && chown $USER:$USER $data"
+    fi
+    if ! [[ -w $data ]]
+    then
+        pkexec chown -R $USER:$USER $data
+    fi
+fi
+
+
+### update: proton ###
+if [[ $update = 1 ]]
+then
+    latest_release() {
+        curl -sw %header{location} https://github.com/$1/releases/latest | sed 's|.*/||'
+    }
+    case $proton in
+        UMU-Proton) proton=$(latest_release Open-Wine-Components/umu-proton) ;&
+        UMU-Proton*) proton_url=https://github.com/Open-Wine-Components/umu-proton/releases/download/$proton/$proton.tar.gz ;;
+    
+        GE-Proton) proton=$(latest_release GloriousEggroll/proton-ge-custom) ;&
+        GE-Proton*) proton_url=https://github.com/GloriousEggroll/proton-ge-custom/releases/download/$proton/$proton.tar.gz ;;
+    
+        *) fail "unrecognized proton=$proton"
+    esac
+    
+    if ! [[ -d $data/proton/$proton ]]
+    then
+        echo "downloading $proton:"
+        mkdir -p $data/proton/$proton
+        curl -L $proton_url | tar xzC $data/proton/$proton --strip-components=1
+    fi
+else
+    p=$(find $data/proton -maxdepth 1 -type d -name "$proton*" | sort -Vr | head -n1)
+
+    if [[ -z $p ]]
+    then
+        fail "can't find $data/proton/$proton*"
+    fi
+
+    proton=${p##*/}
+fi
+
+
+### update: runtime ###
+runtime_appid=$(rg -oP "require_tool_appid.*?\K[0-9]+" $data/proton/$proton/toolmanifest.vdf)
+case $runtime_appid in
+    1628350) runtime=steamrt3 runtime_url=https://repo.steampowered.com/steamrt3/images/latest-public-beta/SteamLinuxRuntime_sniper.tar.xz ;;
+    *) fail "unrecognized runtime_appid=$runtime_appid"
+esac
+
+if [[ $update = 1 ]]
+then
+    if [[ -d $data/runtime/$runtime ]] && ! rg -Fq $(curl -s ${runtime_url%/*}/VERSION.txt) $data/runtime/$runtime/VERSIONS.txt
+    then
+        rm -r $data/runtime/$runtime
+    fi
+    
+    if ! [[ -d $data/runtime/$runtime ]]
+    then
+        echo "downloading $runtime:"
+        mkdir -p $data/runtime/$runtime
+        curl $runtime_url | tar xJC $data/runtime/$runtime --strip-components=1
+    else
+        rm -r $data/runtime/$runtime/files
+    fi
+
+    $data/runtime/$runtime/pressure-vessel/bin/pressure-vessel-unruntime                  \
+        --runtime=$(find $data/runtime/$runtime -maxdepth 1 -type d -name "*_platform_*") \
+        --variable-dir=$data/runtime/$runtime/var                                         \
+        --only-prepare
+    mv $data/runtime/$runtime/{var/*/usr,files}
+    rm -r $data/runtime/$runtime/var
+
+    find $data/runtime/$runtime/files -type d -exec chmod 755 {} +
+    find $data/runtime/$runtime/files -name .ref -exec ln -sf /dev/null {} \;
+
+    find $data/runtime/$runtime/files -lname "/run/host/*" -xtype d -delete -exec mkdir {} +
+    find $data/runtime/$runtime/files -lname "/run/host/*" -xtype f -not -path "*overrides*" -exec sh -c 't=$(realpath {}) && rm {} && cp $t {}' \;
+fi
+
+
+### execution ###
+if [[ $# -gt 0 ]]
+then
+    mkdir -p $prefix
+    ln -sfT . $prefix/pfx
+
+    export PRESSURE_VESSEL_RUNTIME=$data/runtime/$runtime
+    export PRESSURE_VESSEL_FILESYSTEMS_RO=$PRESSURE_VESSEL_FILESYSTEMS_RO${PRESSURE_VESSEL_FILESYSTEMS_RO:+:}$data/proton/$proton
+
+    export STEAM_COMPAT_DATA_PATH=$prefix
+    export STEAM_COMPAT_CLIENT_INSTALL_PATH=
+    export SteamGameId=pup
+    export UMU_ID=pup
+
+    export DXVK_HDR=1
+
+    proton=( $data/runtime/$runtime/pressure-vessel/bin/pressure-vessel-unruntime -- $data/proton/$proton/proton $verb )
+
+    vulkaninfo=$(vulkaninfo 2>/dev/null)
+    for ext in VK_KHR_maintenance6 VK_EXT_descriptor_indexing
+    do
+        if ! [[ $vulkaninfo == *$ext* ]]
+        then
+            export PROTON_USE_WINED3D=1
+            break
+        fi
+    done
+
+    if [[ $wayland = 1 ]]
+    then
+        export PROTON_ENABLE_WAYLAND=1
+    fi
+
+    if [[ $gamescope = 1 ]]
+    then
+        if [[ $XDG_CURRENT_DESKTOP = GNOME ]]
+        then
+            read GNOME_{WIDTH,HEIGHT,REFRESH} \
+                < <(gdctl show | rg -o "[0-9]*x[0-9]*@[0-9.]*" | tr x@ " " | sort -nr | head -1)
+
+            GAMESCOPE_WIDTH=${GAMESCOPE_WIDTH:-$GNOME_WIDTH}
+            GAMESCOPE_HEIGHT=${GAMESCOPE_HEIGHT:-$GNOME_HEIGHT}
+            GAMESCOPE_REFRESH=${GAMESCOPE_REFRESH:-$GNOME_REFRESH}
+        fi
+        if [[ -z $GAMESCOPE_WIDTH ]] || [[ -z $GAMESCOPE_HEIGHT ]] || [[ -z $GAMESCOPE_REFRESH ]]
+        then
+            fail missing GAMESCOPE_{WIDTH,HEIGHT,REFRESH}
+        fi
+
+        export XKB_DEFAULT_LAYOUT=${XKB_DEFAULT_LAYOUT:-$(localectl | rg -oP "X11 Layout: \K.*")}
+        proton=( gamescope -f -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT -r $GAMESCOPE_REFRESH --mangoapp --force-grab-cursor --hdr-enabled --hdr-debug-force-support "${proton[@]}" )
+    else
+        proton=( mangohud "${proton[@]}" )
+    fi
+
+    exec systemd-run --user --scope --collect --quiet -- "${proton[@]}" "$@"
+fi
