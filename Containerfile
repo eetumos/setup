@@ -42,7 +42,7 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
                    {h,b}top {s,l}trace socat iotop-c nethogs nmap wev                                          \
                    smartmontools sg3_utils android-tools wireshark tio                                         \
                    tmux nnn neovim ripgrep rclone aria2 git-lfs pwgen tini fzf                                 \
-                   unrar p7zip-plugins bsdtar mediainfo mkvtoolnix tesseract                                   \
+                   unrar p7zip-plugins bsdtar mediainfo mkvtoolnix lib{avif,webp}-tools tesseract              \
                    rpmdevtools cargo fontconfig-devel pipx uv python3-devel cmake meson gdb perf               \
                    wireguard-tools msmtp golang-github-acme-lego                                               \
                    steam gamescope mangohud egl-utils vulkan-tools igt-gpu-tools vulkan-validation-layers   && \
