@@ -2,7 +2,7 @@
 set -e
 
 fail() {
-    echo pup: "$@"
+    echo ${0##*/}: "$@"
     exit 1
 }
 
@@ -12,6 +12,9 @@ data=${data:-/var/lib/pup}
 games=${games:-/var/opt/pup}
 prefix=${prefix:-~/.local/share/pup}
 proton=${proton:-GE-Proton}
+verb=${verb:-waitforexitandrun}
+
+return 0 2>/dev/null || true
 
 case $proton in
     umu) proton=UMU-Proton ;;
@@ -24,8 +27,8 @@ for arg in update wayland gamescope
 do
     if [[ $1 = --$arg ]]
     then
-        shift
         declare $arg=1
+        shift
     else
         declare $arg=0
     fi
@@ -37,14 +40,21 @@ then
 fi
 
 
-### setup ###
+### update: permissions ###
 if [[ $update = 1 ]]
 then
-    mkdir -p $data 2>/dev/null || pkexec sh -c "mkdir -p $data && chown $USER:$USER $data"
+    if ! mkdir -p $data 2>/dev/null
+    then
+        pkexec sh -c "mkdir -p $data && chown $USER:$USER $data"
+    fi
+    if ! [[ -w $data ]]
+    then
+        pkexec chown -R $USER:$USER $data
+    fi
 fi
 
 
-### proton ###
+### update: proton ###
 if [[ $update = 1 ]]
 then
     latest_release() {
@@ -78,7 +88,7 @@ else
 fi
 
 
-### runtime ###
+### update: runtime ###
 runtime_appid=$(rg -oP "require_tool_appid.*?\K[0-9]+" $data/proton/$proton/toolmanifest.vdf)
 case $runtime_appid in
     1628350) runtime=steamrt3 runtime_url=https://repo.steampowered.com/steamrt3/images/latest-public-beta/SteamLinuxRuntime_sniper.tar.xz ;;
@@ -97,31 +107,52 @@ then
         echo "downloading $runtime:"
         mkdir -p $data/runtime/$runtime
         curl $runtime_url | tar xJC $data/runtime/$runtime --strip-components=1
-        ln -sf /dev/null $data/runtime/$runtime/*platform*/.ref
+    else
+        rm -r $data/runtime/$runtime/files
     fi
+
+    $data/runtime/$runtime/pressure-vessel/bin/pressure-vessel-unruntime                  \
+        --runtime=$(find $data/runtime/$runtime -maxdepth 1 -type d -name "*_platform_*") \
+        --variable-dir=$data/runtime/$runtime/var                                         \
+        --only-prepare
+    mv $data/runtime/$runtime/{var/*/usr,files}
+    rm -r $data/runtime/$runtime/var
+
+    find $data/runtime/$runtime/files -type d -exec chmod 755 {} +
+    find $data/runtime/$runtime/files -name .ref -exec ln -sf /dev/null {} \;
+
+    find $data/runtime/$runtime/files -lname "/run/host/*" -xtype d -delete -exec mkdir {} +
+    find $data/runtime/$runtime/files -lname "/run/host/*" -xtype f -not -path "*overrides*" -exec sh -c 't=$(realpath {}) && rm {} && cp $t {}' \;
 fi
 
 
 ### execution ###
 if [[ $# -gt 0 ]]
 then
-    export PRESSURE_VESSEL_FILESYSTEMS_RO=$PRESSURE_VESSEL_FILESYSTEMS_RO:$data
-    export PRESSURE_VESSEL_VARIABLE_DIR=~/.cache/pup
-
     mkdir -p $prefix
-    ln -sfn . $prefix/pfx
+    ln -sfT . $prefix/pfx
+
+    export PRESSURE_VESSEL_FILESYSTEMS_RO=$PRESSURE_VESSEL_FILESYSTEMS_RO:$data
+    export PRESSURE_VESSEL_RUNTIME=$data/runtime/$runtime
+
     export STEAM_COMPAT_DATA_PATH=$prefix
     export STEAM_COMPAT_CLIENT_INSTALL_PATH=
-    export SteamGameId=${SteamGameId:-0}
+    export SteamGameId=pup
+    export UMU_ID=pup
 
     export DXVK_HDR=1
 
-    if ! vulkaninfo 2>/dev/null | rg -q VK_KHR_maintenance5
-    then
-        export PROTON_USE_WINED3D=1
-    fi
+    proton=( $data/runtime/$runtime/pressure-vessel/bin/pressure-vessel-unruntime -- $data/proton/$proton/proton $verb )
 
-    proton=( $data/runtime/$runtime/_v2-entry-point -- $data/proton/$proton/proton waitforexitandrun )
+    vulkaninfo=$(vulkaninfo 2>/dev/null)
+    for ext in VK_KHR_maintenance6 VK_EXT_descriptor_indexing
+    do
+        if ! [[ $vulkaninfo == *$ext* ]]
+        then
+            export PROTON_USE_WINED3D=1
+            break
+        fi
+    done
 
     if [[ $wayland = 1 ]]
     then
@@ -133,7 +164,7 @@ then
         if [[ $XDG_CURRENT_DESKTOP = GNOME ]]
         then
             read GNOME_{WIDTH,HEIGHT,REFRESH} \
-                < <(gdctl show | grep -o "[0-9]*x[0-9]*@[0-9.]*" | tr x@ " " | sort -nr | head -1)
+                < <(gdctl show | rg -o "[0-9]*x[0-9]*@[0-9.]*" | tr x@ " " | sort -nr | head -1)
 
             GAMESCOPE_WIDTH=${GAMESCOPE_WIDTH:-$GNOME_WIDTH}
             GAMESCOPE_HEIGHT=${GAMESCOPE_HEIGHT:-$GNOME_HEIGHT}
@@ -144,7 +175,7 @@ then
             fail missing GAMESCOPE_{WIDTH,HEIGHT,REFRESH}
         fi
 
-        export XKB_DEFAULT_LAYOUT=${XKB_DEFAULT_LAYOUT:-$(localectl | grep -oP "X11 Layout: \K.*")}
+        export XKB_DEFAULT_LAYOUT=${XKB_DEFAULT_LAYOUT:-$(localectl | rg -oP "X11 Layout: \K.*")}
         proton=( gamescope -f -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT -r $GAMESCOPE_REFRESH --mangoapp --force-grab-cursor --hdr-enabled --hdr-debug-force-support "${proton[@]}" )
     else
         proton=( mangohud "${proton[@]}" )
@@ -160,7 +191,5 @@ then
         set -- "$(realpath "$games/$1/exe")" "${@:2}"
     fi
 
-    # TODO: test wolf
-    # TODO: use tini
-    exec "${proton[@]}" "$@"
+    exec systemd-run --user --scope --collect --quiet -- "${proton[@]}" "$@"
 fi
