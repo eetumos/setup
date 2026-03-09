@@ -2,7 +2,7 @@
 set -e
 
 fail() {
-    echo ${0##*/}: "$@"
+    echo pup: "$@"
     exit 1
 }
 
@@ -14,23 +14,30 @@ prefix=${prefix:-~/.local/share/pup}
 proton=${proton:-GE-Proton}
 verb=${verb:-waitforexitandrun}
 
-return 0 2>/dev/null || true
-
-case $proton in
-    umu) proton=UMU-Proton ;;
-    ge) proton=GE-Proton ;;
-esac
-
-
-### arguments ###
-for arg in update wayland gamescope
+flags=()
+while [[ $1 = --* ]]
 do
-    if [[ $1 = --$arg ]]
+    flags+=( ${1#--} )
+    shift
+done
+
+if [[ -f $games/$1/exe ]]
+then
+    if [[ -f $games/$1/env ]]
     then
-        declare $arg=1
-        shift
+        export $(< "$games/$1/env")
+    fi
+
+    set -- "$(realpath "$games/$1/exe")" "${@:2}"
+fi
+
+for flag in update wayland gamescope
+do
+    if [[ ${!flag} = 1 ]] || [[ " ${flags[*]} " =~ " $flag " ]]
+    then
+        declare $flag=1
     else
-        declare $arg=0
+        declare $flag=0
     fi
 done
 
@@ -38,6 +45,13 @@ if [[ $wayland = 1 ]] && [[ $gamescope = 1 ]]
 then
     fail "--wayland and --gamescope are mutually exclusive"
 fi
+
+case $proton in
+    umu) proton=UMU-Proton ;;
+    ge) proton=GE-Proton ;;
+esac
+
+export -n data games prefix proton verb update wayland gamescope
 
 
 ### update: permissions ###
@@ -179,16 +193,6 @@ then
         proton=( gamescope -f -w $GAMESCOPE_WIDTH -h $GAMESCOPE_HEIGHT -r $GAMESCOPE_REFRESH --mangoapp --force-grab-cursor --hdr-enabled --hdr-debug-force-support "${proton[@]}" )
     else
         proton=( mangohud "${proton[@]}" )
-    fi
-
-    if [[ -f $games/$1/exe ]]
-    then
-        if [[ -f $games/$1/env ]]
-        then
-            export $(< "$games/$1/env")
-        fi
-
-        set -- "$(realpath "$games/$1/exe")" "${@:2}"
     fi
 
     exec systemd-run --user --scope --collect --quiet -- "${proton[@]}" "$@"
