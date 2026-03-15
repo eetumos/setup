@@ -11,6 +11,8 @@ fail() {
 games=${games:-/var/opt/pup}
 export prefix=$games/.pup-install
 
+pup=${0%pup-install}pup
+
 name=$1
 shift
 
@@ -31,7 +33,7 @@ if [[ $# -gt 0 ]]
 then
     mkdir -p "$games/$name/files" $prefix/dosdevices
     ln  -sfT "$games/$name/files" $prefix/dosdevices/p:
-    ${0%pup-install}pup "$@"
+    $pup "$@"
 fi
 
 
