@@ -168,6 +168,14 @@ then
         fi
     done
 
+    for file in /etc/MangoHud.conf ~/.config/MangoHud/MangoHud.conf "$MANGOHUD_CONFIGFILE"
+    do
+        if [[ -f $file ]]
+        then
+            export MANGOHUD_CONFIGFILE=/run/host/$file
+        fi
+    done
+
     if [[ $wayland = 1 ]]
     then
         export PROTON_ENABLE_WAYLAND=1
