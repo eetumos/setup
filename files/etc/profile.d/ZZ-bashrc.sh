@@ -152,6 +152,7 @@ ca s ssh
 ca y yt-dlp
 
 ca ra rsync
+ca rc rsync
 ca rv rsync
 
 ca ga git add
