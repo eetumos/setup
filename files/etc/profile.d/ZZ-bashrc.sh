@@ -41,6 +41,7 @@ alias s="ssh $s"
 alias t="s -N -D8080 -L8008:localhost:8008"
 alias y="yt-dlp --add-metadata --embed-subs --sub-lang=en,fi,fi-FI --retries=30 --retry-sleep=10"
 
+alias bw='sudo efibootmgr -n $(efibootmgr | rg -oP "^Boot\K[0-9a-f]*(?=\* Windows)") && systemctl reboot'
 alias ga="git add"
 alias gc="git commit"
 alias gd="git diff"
