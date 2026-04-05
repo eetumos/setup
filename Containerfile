@@ -37,16 +37,16 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-multimedia.repo             && \
     dnf update -y
 
-RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
-    dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                                                  \
-                   {h,b}top {s,l}trace socat iotop-c nethogs nmap wev                                          \
-                   smartmontools sg3_utils android-tools wireshark tio                                         \
-                   tmux nnn neovim ripgrep rclone aria2 git-lfs pwgen fzf                                      \
-                   unrar p7zip-plugins bsdtar mediainfo mkvtoolnix lib{avif,webp}-tools tesseract              \
-                   rpmdevtools cargo fontconfig-devel pipx uv python3-devel cmake meson gdb perf               \
-                   wireguard-tools msmtp golang-github-acme-lego                                               \
-                   steam gamescope mangohud egl-utils vulkan-tools igt-gpu-tools vulkan-validation-layers   && \
-    setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop                               && \
+RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z  \
+    dnf install -y langpacks-fi nautilus gnome-{tweaks,boxes}                                                   \
+                   {h,b}top {s,l}trace socat iotop-c nethogs nmap wev                                           \
+                   smartmontools sg3_utils android-tools wireshark tio                                          \
+                   tmux nnn neovim ripgrep rclone aria2 git-lfs pwgen fzf                                       \
+                   unrar p7zip-plugins bsdtar mediainfo mkvtoolnix lib{avif,webp}-tools tesseract guestfs-tools \
+                   rpmdevtools cargo fontconfig-devel pipx uv python3-devel cmake meson gdb perf                \
+                   wireguard-tools msmtp golang-github-acme-lego                                                \
+                   steam gamescope mangohud egl-utils vulkan-tools igt-gpu-tools vulkan-validation-layers    && \
+    setcap CAP_PERFMON=ep /usr/bin/intel_gpu_top CAP_PERFMON=ep /usr/bin/btop                                && \
     echo NoDisplay=true | tee -a /usr/share/applications/{nvim,htop}.desktop >/dev/null
 RUN fix() { cat /etc/$1 >>/usr/lib/$1; cp /dev/null /etc/$1; } && \
     fix passwd                                                 && \
