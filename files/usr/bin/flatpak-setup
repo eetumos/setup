@@ -23,6 +23,7 @@ APP=(org.gnome.baobab
      org.gnome.Weather
 
      org.chromium.Chromium
+     com.github.johnfactotum.Foliate
      io.mpv.Mpv
 
      org.libreoffice.LibreOffice
