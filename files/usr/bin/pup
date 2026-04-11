@@ -203,5 +203,5 @@ then
         proton=( mangohud "${proton[@]}" )
     fi
 
-    exec systemd-run --user --scope --collect --quiet -- "${proton[@]}" "$@"
+    exec gnome-session-inhibit systemd-run --user --scope --collect --quiet -- "${proton[@]}" "$@"
 fi
