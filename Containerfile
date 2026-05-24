@@ -75,6 +75,8 @@ RUN dnf install -y libusb1-devel systemd-devel                                  
 
 RUN curl -sL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip | bsdtar xC /usr/bin --strip-components=1 && \
     chmod 755 /usr/bin/bun
+RUN curl -sLo /usr/bin/biome https://github.com/biomejs/biome/releases/latest/download/biome-linux-x64 && \
+    chmod +x  /usr/bin/biome
 
 RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit && \
     chmod +x  /usr/bin/kepubify
