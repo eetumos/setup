@@ -142,7 +142,7 @@ RUN --mount=type=cache,dst=/.cache/pip                                          
     source             /usr/lib/nvidia-venv/bin/activate                               && \
     pip download --index-url=https://download.pytorch.org/whl/cu130 --no-deps torch    && \
     torch=$(unzip -p torch-*.whl torch-*/METADATA)                                     && \
-    for p in $(rg -oP 'Requires-Dist: \Knvidia-(cu)?(blas|da-cupti|da-nvrtc|da-runtime|dnn|fft|file|pti|rand|solver|sparse|nvjitlink).*?(?=;)' <<< $torch | sed -e 's/-/_/g' -e 's/==/-/'); \
+    for p in $(rg -oP 'Requires-Dist: \Knvidia-(cu)?(blas|da-cupti|da-nvrtc|da-runtime|dnn|fft|file|pti|rand|solver|sparse|nvjitlink).*?(?=;)' <<< $torch | sed -e 's/-/_/g' -e 's/,//' -e 's/>=[0-9.]*//' -e 's/<=/==/' -e 's/==/-/'); \
     do                                                                                    \
         mkdir /usr/lib/nvidia-venv/lib64/python3.10/site-packages/$p.dist-info         && \
         touch /usr/lib/nvidia-venv/lib64/python3.10/site-packages/$p.dist-info/METADATA ; \
