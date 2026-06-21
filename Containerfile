@@ -1,5 +1,5 @@
 ### common ###
-FROM quay.io/fedora/fedora-silverblue:43 AS common
+FROM quay.io/fedora/fedora-silverblue:44 AS common
 RUN dnf remove -y gnome-software{,-rpm-ostree} firefox{,-langpacks} yelp sos python3-botocore
 ENV PATH=/usr/bin
 
@@ -9,7 +9,7 @@ COPY build-env/uname /usr/bin/uname
 
 
 ### kernel ###
-ARG KERNEL=6.19
+ARG KERNEL=7.0
 RUN if [[ $(rpm -q --qf %{version} kernel) > $KERNEL.999 ]]                                              ; \
     then                                                                                                   \
         rpm-ostree uninstall -y kernel{,-core} kernel-modules{,-core,-extra} virtualbox-guest-additions && \
@@ -19,7 +19,7 @@ RUN if [[ $(rpm -q --qf %{version} kernel) > $KERNEL.999 ]]                     
 
 RUN dnf install -y kernel-devel-matched "kernel-headers <= $(rpm -q --qf %{version} kernel)" rpm-build
 
-RUN dnf install -y https://zfsonlinux.org/fedora/zfs-release-3-0$(rpm -E %dist).noarch.rpm && \
+RUN dnf install -y https://zfsonlinux.org/fedora/zfs-release-3-1$(rpm -E %dist).noarch.rpm && \
     dnf install -y zfs
 
 RUN curl -sL https://github.com/BoukeHaarsma23/zenergy/archive/master.tar.gz | tar xz && \
@@ -130,10 +130,12 @@ RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update
 FROM common AS nvidia
 
 RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
-    curl -sLO --output-dir /etc/yum.repos.d https://negativo17.org/repos/fedora-nvidia-580.repo             && \
+    curl -sLOO --output-dir /etc/yum.repos.d                                                                   \
+        https://negativo17.org/repos/fedora-nvidia-580.repo                                                    \
+        https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo               && \
     dnf install -y --disable-repo=fedora-multimedia nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
     dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
-    dnf install -y cuda{,-cudnn,-cupti} libcusparselt golang-github-nvidia-container-toolkit nvtop          && \
+    dnf install -y cuda{,-cudnn,-cupti} libcusparselt nvidia-container-toolkit nvtop                        && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
 
 RUN --mount=type=cache,dst=/.cache/pip                                                    \
