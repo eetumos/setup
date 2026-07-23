@@ -89,6 +89,16 @@ RUN curl -sL https://github.com/samtools/samtools/releases/latest/download/samto
     curl -sL https://github.com/samtools/htslib/releases/latest/download/htslib-1.24.tar.bz2     | tar xj && \
     cd   htslib-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r   htslib-*
 
+RUN --mount=type=cache,dst=.                                                                                                                                                                           \
+    deb() { f=${1##*/}; [ -f $f ] || curl -O $1; ar p $f $(ar t $f | rg data.tar) | bsdtar xC / --exclude=^lib --exclude=lintian --exclude=gnome-shell --exclude=leapc_cffi --exclude=LICENSE.protobuf \
+        -s "|lib/x86_64-linux-gnu/cmake/LeapSDK/leapsdk-config|lib64/cmake/LeapSDK/LeapSDKConfig|" -s "|lib/ultraleap-hand-tracking-service/cmake|lib64/cmake/LeapC|" -s "|lib/[^/]*|lib64|"; }     && \
+    deb https://web.archive.org/web/20260124060130/https://repo.ultraleap.com/apt/pool/main/u/ultraleap-hand-tracking-service/ultraleap-hand-tracking-service_5.17.1.0-a9f25232-1.0_amd64.deb       && \
+    deb https://web.archive.org/web/20260124060130/https://repo.ultraleap.com/apt/pool/main/u/ultraleap-hand-tracking-control-panel/ultraleap-hand-tracking-control-panel_1125862.deb               && \
+    deb https://web.archive.org/web/20260124060130/https://repo.ultraleap.com/apt/pool/main/o/openxr-layer-ultraleap/openxr-layer-ultraleap_1.6.5%2B2486adf9.CI1130164_amd64.deb                    && \
+    sed -i '$s|.*|include(/usr/lib64/cmake/LeapC/LeapCTargets.cmake)|' /usr/lib64/cmake/LeapSDK/LeapSDKConfig.cmake                                                                                 && \
+    sed -i "s|lib/ultraleap-hand-tracking-service|lib64|" /usr/lib64/cmake/LeapC/LeapCTargets-release.cmake                                                                                         && \
+    sed -i "s|/.*\(libUltraleapHandTracking.so\)|\1|" /usr/share/openxr/1/api_layers/implicit.d/XrApiLayer_Ultraleap.json
+
 RUN --mount=type=bind,src=patches/monado,dst=patches,z                                          \
     dnf install -y {eigen3,hidapi,openxr,systemd,vulkan-loader,wayland,wayland-protocols}-devel \
                    lib{drm,glvnd,usb1,v4l,Xrandr}-devel glslang                              && \
