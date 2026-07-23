@@ -99,16 +99,16 @@ RUN --mount=type=cache,dst=.                                                    
     sed -i "s|lib/ultraleap-hand-tracking-service|lib64|" /usr/lib64/cmake/LeapC/LeapCTargets-release.cmake                                                                                         && \
     sed -i "s|/.*\(libUltraleapHandTracking.so\)|\1|" /usr/share/openxr/1/api_layers/implicit.d/XrApiLayer_Ultraleap.json
 
-RUN --mount=type=bind,src=patches/monado,dst=patches,z                                          \
-    dnf install -y {eigen3,hidapi,openxr,systemd,vulkan-loader,wayland,wayland-protocols}-devel \
-                   lib{drm,glvnd,usb1,v4l,Xrandr}-devel glslang                              && \
-    git clone --recurse-submodules https://gitlab.freedesktop.org/monado/monado.git          && \
-    cd monado                                                                                && \
-    for P in ../patches/*; do git apply $P; done                                             && \
-    cmake  -B       build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr                \
-                          -DBUILD_TESTING=OFF -DXRT_FEATURE_SERVICE=ON                       && \
-    cmake --build   build -j                                                                 && \
-    cmake --install build                                                                    && \
+RUN --mount=type=bind,src=patches/monado,dst=patches,z                                               \
+    dnf install -y {eigen3,hidapi,openxr,systemd,vulkan-loader,wayland,wayland-protocols}-devel      \
+                   lib{drm,glvnd,usb1,v4l,Xrandr}-devel glslang                                   && \
+    git clone --recurse-submodules https://gitlab.freedesktop.org/monado/monado.git               && \
+    cd monado                                                                                     && \
+    for P in ../patches/*; do git apply $P; done                                                  && \
+    cmake  -B       build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr                     \
+                          -DBUILD_TESTING=OFF -DXRT_FEATURE_SERVICE=ON -DXRT_BUILD_DRIVER_ULV5=ON && \
+    cmake --build   build -j                                                                      && \
+    cmake --install build                                                                         && \
     cd .. && rm -r monado
 
 RUN curl -sL https://nightly.link/Supreeeme/xrizer/workflows/ci/main/xrizer-nightly-release.zip | bsdtar xC /usr/lib64 && \
