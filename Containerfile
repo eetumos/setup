@@ -117,6 +117,14 @@ RUN curl -sL https://nightly.link/Supreeeme/xrizer/workflows/ci/main/xrizer-nigh
 RUN dnf copr enable -y eetumos/wpewebkit && \
     dnf install -y wpewebkit
 
+RUN rew=$(curl https://roomeqwizard.com/installers/ | rg -o 'REW_linux_no_jre.*\.sh' | sort -Vr | head -n1) && \
+    curl -o rew https://roomeqwizard.com/installers/$rew                                                    && \
+    sed -i 's/-gt "17"/= ""/g' rew                                                                          && \
+    chmod +x rew                                                                                            && \
+    XDG_DATA_HOME=$PWD ./rew -q                                                                             && \
+    sed -i 's/-gt "17"/= ""/g' /opt/REW/roomeqwizard                                                        && \
+    rm -r rew install4j /.cache/install4j
+
 RUN curl -sLOOO -o date-menu-formatter@marcinjakubowski.github.com.strip.zip -o lan-ip-address@mrhuber.com.strip.zip                                  \
         https://github.com/eetumos/battery-time/releases/latest/download/battery-time@eetumos.github.com.shell-extension.zip                          \
         https://github.com/Leleat/Tiling-Assistant/releases/latest/download/tiling-assistant@leleat-on-github.shell-extension.zip                     \
