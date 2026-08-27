@@ -156,6 +156,12 @@ RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dn
     dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
     dnf install -y cuda{,-cudnn,-cupti} libcusparselt nvidia-container-toolkit nvtop                        && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
+#    dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia
+#RUN dnf copr enable -y eetumos/ffmpeg                                                                       && \
+#    dnf install -y cuda-13.0.85                                                                             && \
+#    dnf versionlock add cuda                                                                                && \
+#    dnf install -y cuda{-cudnn,-cupti} libcusparselt nvidia-container-toolkit nvtop                         && \
+#    echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
 
 RUN --mount=type=cache,dst=/.cache/pip                                                    \
     dnf install -y python3.10-devel                                                    && \
