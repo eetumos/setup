@@ -149,13 +149,9 @@ RUN mv /usr/bin/uname{.orig,} && rm -r * && dconf update
 ### nvidia ###
 FROM common AS nvidia
 
-RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z \
-    curl -sLOO --output-dir /etc/yum.repos.d                                                                   \
-        https://negativo17.org/repos/fedora-nvidia-580.repo                                                    \
-        https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo               && \
-    dnf install -y --disable-repo=fedora-multimedia nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
-    dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia       && \
-    dnf install -y cuda{,-cudnn,-cupti} libcusparselt nvidia-container-toolkit nvtop                        && \
+RUN --mount=type=cache,dst=/var/cache/libdnf5 --mount=type=bind,src=build-env/dnf.conf,dst=/etc/dnf/dnf.conf,z                            \
+    curl -sLO --output-dir /etc/yum.repos.d https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo      && \
+    dnf install -y nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia cuda{,-cudnn,-cupti} libcusparselt nvidia-container-toolkit nvtop && \
     echo NoDisplay=true >>/usr/share/applications/nvtop.desktop
 #    dnf versionlock add                             nvidia-driver{,-libs.i686,-cuda-libs} dkms-nvidia
 #RUN dnf copr enable -y eetumos/ffmpeg                                                                       && \
