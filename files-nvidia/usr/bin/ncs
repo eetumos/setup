@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 [[ $UID -eq 0 ]] || exec sudo $0 "$@"
+set -e
 
 nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 
@@ -9,7 +10,7 @@ add() {
         return
     fi
 
-    entry="
+    IFS= read -rd '' entry <<-EOF || true
         - hostPath: $1
           containerPath: $1
           options:
@@ -17,15 +18,14 @@ add() {
             - nosuid
             - nodev
             - rbind
-            - rprivate"
+            - rprivate
+	EOF
+    entry=${entry%$'\n'}
 
-    rg --passthru -Pr "$entry" "mounts:\K" /etc/cdi/nvidia.yaml \
-        | cp /dev/stdin /etc/cdi/nvidia.yaml
+    sed -i "/mounts:/a\\${entry//$'\n'/\\n}" /etc/cdi/nvidia.yaml
 }
 
-add /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json
-
-for path in $(rpm -ql {nvidia-driver-libs,libnvidia-ml}.i686)
+for path in $(rpm -ql nvidia-driver-libs.i686)
 do
     if [[ -d $path ]]
     then
