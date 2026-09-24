@@ -23,7 +23,7 @@ add() {
 
 add /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json
 
-for path in $(rpm -ql {nvidia-driver-libs,libnvidia-ml}.i686)
+for path in $(rpm -ql nvidia-driver-libs.i686)
 do
     if [[ -d $path ]]
     then
