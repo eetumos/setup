@@ -76,14 +76,13 @@ fav() {
     ffmpeg -i "$file" -c:v libsvtav1 -preset $preset -crf $crf -svtav1-params tune=0 "$output"
 }
 fs() {
-    local F="$1" N="${1##*/}" VC=${2:-hevc} Q=${3:-30} S="${4/#[1-9]*/-vf scale_cuda=&:-1}" L=4
-
-    [[ -z $S ]] && ((L--))
-    shift $(( $# < $L ? $# : $L ))
-
-    ffmpeg -loglevel error -stats -hwaccel cuda -hwaccel_output_format cuda -i "$F" -map 0 \
-        -c:v ${VC}_nvenc -cq $Q -preset p7 $S                                              \
-        -c:a libopus -b:a 96k -ac 2 -c:s copy -strict unofficial "$@" "${N%.*}-fs.mkv"
+    local filename=${1##*/} qp=${2:-28} quality=${3:-1} width=${4:-1920}
+    ffmpeg -loglevel error -stats -hwaccel vulkan -hwaccel_output_format vulkan -i "$1" -map 0                                           \
+        -vf libplacebo=w=$width:h=ow/a:colorspace=bt709:color_primaries=bt709:color_trc=bt709:tonemapping=bt.2390:format=nv12:range=full \
+        -c:v h264_vulkan -qp $qp -quality $quality -c:a libopus -b:a 96k -ac 2 -c:s copy -strict unofficial "${filename%.*}.fs-$width-$qp.mkv"
+}
+fl() {
+    fs $1 18 5
 }
 fps() {
     local I=$(ffprobe -select_streams s:m:language:eng -show_entries stream=index:disposition=forced,hearing_impaired -of json "$1" \
