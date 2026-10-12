@@ -1,3 +1,6 @@
 KERNEL=="rfkill",                    MODE="0660", GROUP="input"
 SUBSYSTEM=="hidraw",                 MODE="0660", GROUP="input"
 SUBSYSTEMS=="usb", SUBSYSTEM=="tty", MODE="0660", GROUP="input"
+
+# Leap Motion Controller
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="f182", ATTRS{idProduct}=="0003", MODE="0660", GROUP="input"
