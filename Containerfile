@@ -82,11 +82,11 @@ RUN curl -sLo /usr/bin/biome https://github.com/biomejs/biome/releases/latest/do
 RUN curl -sLo /usr/bin/kepubify https://github.com/pgaskin/kepubify/releases/latest/download/kepubify-linux-64bit && \
     chmod +x  /usr/bin/kepubify
 
-RUN curl -sL https://github.com/samtools/samtools/releases/latest/download/samtools-1.24.tar.bz2 | tar xj && \
+RUN curl -sL https://github.com/samtools/samtools/releases/latest/download/samtools-1.25.tar.bz2 | tar xj && \
     cd samtools-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r samtools-*    && \
-    curl -sL https://github.com/samtools/bcftools/releases/latest/download/bcftools-1.24.tar.bz2 | tar xj && \
+    curl -sL https://github.com/samtools/bcftools/releases/latest/download/bcftools-1.25.tar.bz2 | tar xj && \
     cd bcftools-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r bcftools-*    && \
-    curl -sL https://github.com/samtools/htslib/releases/latest/download/htslib-1.24.tar.bz2     | tar xj && \
+    curl -sL https://github.com/samtools/htslib/releases/latest/download/htslib-1.25.tar.bz2     | tar xj && \
     cd   htslib-* && ./configure --prefix=/usr && make -j && make install && cd .. && rm -r   htslib-*
 
 RUN --mount=type=cache,dst=.                                                                                                                                                                           \
