@@ -26,8 +26,10 @@ APP=(org.gnome.baobab
      io.mpv.Mpv
 
      org.libreoffice.LibreOffice
+     org.audacityteam.Audacity
      org.gimp.GIMP
      org.inkscape.Inkscape
+     org.blender.Blender
      org.freecad.FreeCAD
      org.ghidra_sre.Ghidra
 
